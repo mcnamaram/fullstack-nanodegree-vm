@@ -1,18 +1,10 @@
-import enum
 from sqlalchemy import Column, ForeignKey, Integer, String
-from sqlalchemy import Date, Enum, Numeric
+from sqlalchemy import Date, Numeric
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
 
 Base = declarative_base()
-
-
-class GenderEnum(enum.Enum):
-    """Valid genders are (M)ale, (F)emale, and (N)euter"""
-    male = 1
-    female = 2
-    neuter = 3
 
 
 class Shelter(Base):
@@ -30,10 +22,10 @@ class Shelter(Base):
 class Puppy(Base):
     __tablename__ = 'puppy'
 
-    name = Column(String(80), nullable=False)
     id = Column(Integer, primary_key=True)
+    name = Column(String(80), nullable=False)
     date_of_birth = Column(Date)
-    gender = Column('gender', Enum(GenderEnum))
+    gender = Column(String(10))
     weight = Column(Numeric(10, 2))
     picture = Column(String)
     shelter_id = Column(Integer, ForeignKey('shelter.id'))
