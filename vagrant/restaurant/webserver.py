@@ -1,10 +1,8 @@
+import cgi
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from sqlalchemy import create_engine, asc
-# , desc, func
 from sqlalchemy.orm import sessionmaker
-from database_setup import Base, Restaurant
-# , MenuItem
-import cgi
+from database_setup import Base, Restaurant  # , MenuItem
 
 engine = create_engine('sqlite:///restaurantmenu.db')
 
@@ -45,7 +43,7 @@ class webserverHandler(BaseHTTPRequestHandler):
 
     def getRestaurantById(self, restId):
         """get instance of restaurant by given id."""
-        return session.query(Restaurant).filter(Restaurant.id == restId).one()
+        return session.query(Restaurant).filter(id == restId).one()
 
     def deleteRestaurantById(self, restId):
         """Delete record with id given"""

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+  <h1>{{ restaurant.name }}</h1> {% if request.path.endswith('/restaurants/') %}
+  <div><a href="{{ url_for('listRestaurantMenuItems', rest_id=restaurant.id) }}">Select Menu</a></div>
+  {% else %}
+  <div><a href="{{ url_for('listRestaurants') }}">All Menus</a></div>
+  {% endif %}
+  <br/>
+  <div><a href="{{ url_for('addMenuItem', rest_id=restaurant.id) }}">Add Menu Item</a></div>
+  <br/>
+  <div>
+    {% for i in items %}
+    <div>
+      {{i.name}} -: {{i.price}}
+    </div>
+    <div>
+      Description: {{i.description}}
+    </div>
+    <div>
+      <a href="{{ url_for('editMenuItem', rest_id=restaurant.id, item_id=i.id) }}">Edit</a>
+      <br/>
+      <a href="{{ url_for('deleteMenuItem', rest_id=restaurant.id, item_id=i.id) }}">Delete</a>
+    </div>
+    <br/> {% endfor %}
+  </div>
+</body>
+
+</html>
