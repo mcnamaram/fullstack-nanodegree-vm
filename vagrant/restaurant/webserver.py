@@ -28,8 +28,8 @@ class webserverHandler(BaseHTTPRequestHandler):
     ADD_RESTAURANT_FORM = "<form method='POST' enctype='multipart/form-data' \
     action='/restaurants/add'>\
     <p>Enter restaurant details</p>\
-    <p>Name: <input name='name' type='text' /></p>\
-    <input type='submit' value='Submit' />\
+    <p>Name: <input name='name' type='text' placeholder='Name' /></p>\
+    <input type='submit' value='Create' />\
     </form>"
 
     def getRestaurantsList(self):
@@ -38,34 +38,31 @@ class webserverHandler(BaseHTTPRequestHandler):
         restaurants = session.query(Restaurant).order_by(asc(Restaurant.name)).all()
         for restaurant in restaurants:
             output += "<p>%s</p>" % restaurant.name
-            output += "<a href='/restaurants/edit?restaurantid=%s'>Edit</a><br/>" % restaurant.id
-            output += "<a href='/restaurants/delete?restaurantid=%s'>Delete</a><br/><br/>" % restaurant.id
+            output += "<a href='/restaurants/%s/edit'>Edit</a><br/>" % restaurant.id
+            output += "<a href='/restaurants/%s/delete'>Delete</a><br/><br/>" % restaurant.id
 
         return output
 
-    def deleteRestaurant(self, rest_id):
-        """Delete record with id given, return name of restaurant deleted"""
-        to_delete = session.query(Restaurant).filter(Restaurant.id == rest_id).one()
-        name = to_delete.name
-        session.delete(to_delete)
+    def getRestaurantById(self, restId):
+        """get instance of restaurant by given id."""
+        return session.query(Restaurant).filter(Restaurant.id == restId).one()
+
+    def deleteRestaurantById(self, restId):
+        """Delete record with id given"""
+        toDelete = self.getRestaurantById(restId)
+        session.delete(toDelete)
         session.commit()
-        return name
+        return
 
     def setGetHeaders(self):
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
 
-    def setPostHeaders(self):
+    def setPostHeaders(self, redirectPath=None):
         self.send_response(301)
-        self.end_headers()
-
-    def setPutHeaders(self):
-        self.send_response(204)  # good but no content
-        self.end_headers()
-
-    def setDelHeaders(self):
-        self.send_response(200)
+        if redirectPath:
+            self.send_header('Location', redirectPath)
         self.end_headers()
 
     def do_GET(self):
@@ -92,8 +89,11 @@ class webserverHandler(BaseHTTPRequestHandler):
                 output += self.ADD_RESTAURANT_FORM
                 output += self.BACK_TO_LIST
 
-            elif route.endswith("/restaurants/delete"):
-                self.do_DELETE()
+            elif route.endswith("/edit"):
+                self.updateRestaurantName()
+
+            elif route.endswith("/delete"):
+                self.deleteRestaurant()
 
             output += "</body></html>"
             self.wfile.write(output)
@@ -105,35 +105,42 @@ class webserverHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         try:
-            self.setPostHeaders()
             ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
+            if ctype == 'multipart/form-data':
+                fields = cgi.parse_multipart(self.rfile, pdict)
 
             output = ""
             output += "<html><body>"
 
             if self.path.endswith("/hello") or self.path.endswith("/hola"):
-                if ctype == 'multipart/form-data':
-                    fields = cgi.parse_multipart(self.rfile, pdict)
+                self.setPostHeaders()
+                messagecontent = [""]
+                if fields != []:
                     messagecontent = fields.get('message')
 
                 output += "<h2> %s </h2>" % messagecontent[0]
                 output += self.FORM_METHOD
             elif self.path.endswith("/restaurants/add"):
-                print "adding restaurant"
-                if ctype == 'multipart/form-data':
-                    fields = cgi.parse_multipart(self.rfile, pdict)
+                self.setPostHeaders("/restaurants")
+                rest_name = [""]
+                if fields != []:
                     rest_name = fields.get('name')[0]
-
-                if rest_name:
-                    print "adding %s" % rest_name
                     item = Restaurant()
                     item.name = rest_name
                     session.add(item)
-                    print item.name
                     session.commit()
-
-                output += self.ADD_RESTAURANT_FORM
-                output += self.BACK_TO_LIST
+            elif self.path.endswith("/edit"):
+                self.setPostHeaders("/restaurants")
+                rest_name = [""]
+                item = self.getRestaurantById(self.path.split('/')[2])
+                if fields != [] and item != []:
+                    newName = fields.get('newName')[0]
+                    item.name = newName
+                    session.add(item)
+                    session.commit()
+            elif self.path.endswith("/delete"):
+                self.setPostHeaders("/restaurants")
+                item = self.deleteRestaurantById(self.path.split('/')[2])
 
             output += "</body></html>"
             self.wfile.write(output)
@@ -142,30 +149,43 @@ class webserverHandler(BaseHTTPRequestHandler):
         except IOError:
             self.send_error(404, "nothing good here")
 
-    def do_DELETE(self):
-        try:
-            self.setDelHeaders()
-            output = ""
-            output += "<html><body>"
-            path_ = self.path.split('?')
-            if len(path_) > 1:
-                route = path_[0]
-                rest_id = cgi.parse_qs(path_[1]).get('restaurantid')[0]  # why is everything a list?
+    def updateRestaurantName(self):
+        """Assumes restaurant path only"""
+        self.setGetHeaders()
+        restId = self.path.split('/')[2]
+        restaurant = self.getRestaurantById(restId)
+        output = ""
+        output += "<html><body>"
+        output += "<h2>%s</h2><br/>" % restaurant.name
+        output += "<form method='POST' enctype='multipart/form-data' \
+        action='/restaurant/%s/edit' >" % restId
+        output += "<input name='newName' type='text' \
+        placeholder='%s' />" % restaurant.name
+        output += "<input type='submit' value='Rename' />"
+        output += "</form>"
+        output += self.BACK_TO_LIST
+        output += "</body></html>"
+        self.wfile.write(output)
+        # print output
+        return
 
-                if route.endswith("/restaurants/delete"):
-                    rest_name = self.deleteRestaurant(rest_id)
-                    output += "<p>%s Deleted</p>" % rest_name
-            else:
-                output += "No ID supplied"
-
-            output += self.BACK_TO_LIST
-            output += "</body></html>"
-            self.wfile.write(output)
-            # print output
-            return
-
-        except IOError:
-            pass
+    def deleteRestaurant(self):
+        """Assumes restaurant path only"""
+        self.setGetHeaders()
+        restId = self.path.split('/')[2]
+        restaurant = self.getRestaurantById(restId)
+        output = ""
+        output += "<html><body>"
+        output += "<h2>Delete %s?</h2>" % restaurant.name
+        output += "<form method='POST' \
+        action='/restaurant/%s/delete' >" % restId
+        output += "<input type='submit' value='Delete' />"
+        output += "</form>"
+        output += self.BACK_TO_LIST
+        output += "</body></html>"
+        self.wfile.write(output)
+        # print output
+        return
 
 
 def main():
