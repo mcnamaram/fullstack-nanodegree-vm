@@ -1,8 +1,19 @@
 <!DOCTYPE html>
 <html>
 
+<head>
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
 <body>
-  <h1>{{ restaurant.name }}</h1> {% if request.path.endswith('/restaurants/') %}
+  <h1>{{ restaurant.name }}</h1> {% with messages = get_flashed_messages() %} {% if messages %}
+  <ul>
+    {% for message in messages %}
+    <li><strong>{{ message }}</strong></li>
+    {% endfor %}
+  </ul>
+  {% endif %} {% endwith %} {% if request.path.endswith('/restaurants/') %}
   <div><a href="{{ url_for('listRestaurantMenuItems', rest_id=restaurant.id) }}">Select Menu</a></div>
   {% else %}
   <div><a href="{{ url_for('listRestaurants') }}">All Menus</a></div>

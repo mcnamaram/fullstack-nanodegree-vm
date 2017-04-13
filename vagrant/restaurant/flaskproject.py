@@ -1,4 +1,4 @@
-from flask import Flask, render_template, url_for, request, redirect
+from flask import Flask, render_template, url_for, request, redirect, flash
 from database_setup import Restaurant, MenuItem, getSession
 
 PAGE_TOP = "<html><body>"
@@ -41,6 +41,7 @@ def addMenuItem(rest_id):
         item.description = request.form['description']
         session.add(item)
         session.commit()
+        flash("New Item Created")
         return redirect(url_for('listRestaurantMenuItems', rest_id=rest_id))
 
 
@@ -60,6 +61,7 @@ def editMenuItem(rest_id, item_id):
         menuItem.description = request.form['description'] if request.form['description'] else menuItem.description
         session.add(menuItem)
         session.commit()
+        flash("New Item Edited")
         return redirect(url_for('listRestaurantMenuItems', rest_id=rest_id))
 
 
@@ -71,6 +73,7 @@ def deleteMenuItem(rest_id, item_id):
     else:
         session.delete(menuItem)
         session.commit()
+        flash("New Item Deleted")
         return redirect(url_for('listRestaurantMenuItems', rest_id=rest_id))
 
 
@@ -100,5 +103,6 @@ def getMenuItemById(itemId):
 
 
 if __name__ == '__main__':
+    app.secret_key = 'super_secret_key'
     app.debug = True
     app.run(host='0.0.0.0', port=5001)
