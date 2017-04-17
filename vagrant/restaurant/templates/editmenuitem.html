@@ -2,21 +2,31 @@
 <html>
 
 <head>
-  <title></title>
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 
 <body>
-  <h1>Edit Menu Item: {{ item_name }}</h1>
-  <form action="{{ url_for('editMenuItem', rest_id=rest_id, item_id=item_id) }}" method="post">
-    <input type="text" name="name" size="30" placeholder="{{ item_name }}">
-    <br><span>$</span>
-    <input type="number" name="price" size="30" min="0.01" max="2500.00" step="0.01" placeholder="{{ item_price }}">
-    <br>
-    <input type="text" name="description" size="30" placeholder="{{ item_description }}">
-    <br>
-    <input type="submit" value="Update">
-  </form>
-  <div><a href="{{ url_for('listRestaurantMenuItems', rest_id=rest_id) }}">Cancel</a></div>
+  <div class="pane">
+    <div class="header">
+      <h1>Edit Menu Item: {{ item_name }}</h1>
+    </div>
+    <div>
+      <form action="{{ url_for('editMenuItem', rest_id=rest_id, item_id=item_id) }}" method="post">
+        <p>
+          <input type="text" name="name" size="30" placeholder="{{ item_name }}">
+        </p>
+        <p><span>$</span>
+          <input type="number" name="price" size="30" min="0.01" max="2500.00" step="0.01" placeholder="{{ item_price }}">
+        </p>
+        <p>
+          <input type="text" name="description" size="30" placeholder="{{ item_description }}">
+        </p>
+        <div>
+          <input type="submit" value="Update">
+          <a href="{{ url_for('listRestaurantMenuItems', rest_id=rest_id) }}">Cancel</a>
+        </div>
+      </form>
+    </div>
 </body>
 
 </html>

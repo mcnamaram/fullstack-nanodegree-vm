@@ -1,14 +1,13 @@
 body {
   font-family: sans-serif;
-  background-image: url('img3.jpg');
-  background-color: #333333
+  background-color: #191970
 }
 
 h1,
 h2,
 h3,
 h4 {
-  color: #FFFFFF;
+  color: #FFFFE0;
 }
 
 h1,
@@ -26,9 +25,10 @@ h2 {
 }
 
 p,
+div,
 dd,
 dt {
-  color: #CCCCCC;
+  color: #F8F8FF;
 }
 
 a {
@@ -53,6 +53,11 @@ a {
   text-align: center;
 }
 
+.group {
+  padding: 5px;
+  margin: 5px;
+}
+
 .name {
   width: 50%;
   display: inline-block;
@@ -70,5 +75,5 @@ a {
 .editdeletepane {}
 
 .flash {
-  background: #cee5F5;
+  background: #228B22;
 }

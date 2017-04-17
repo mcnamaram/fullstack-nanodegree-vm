@@ -1,4 +1,5 @@
-from flask import Flask, render_template, url_for, request, redirect, flash
+from flask import Flask, render_template, url_for, request, redirect
+from flask import flash, jsonify
 from database_setup import Restaurant, MenuItem, getSession
 
 PAGE_TOP = "<html><body>"
@@ -13,12 +14,8 @@ app = Flask(__name__)
 @app.route('/restaurants/')
 def listRestaurants():
     restaurants = getAllRestaurants()
-    page = ""
-    for restaurant in restaurants:
-        items = getAllMenuItemsByRestaurantId(restaurant.id)
-        page += render_template('menu.html',
-                                restaurant=restaurant, items=items)
-    return page
+    return render_template('restaurants.html',
+                           restaurants=restaurants)
 
 
 @app.route('/restaurants/<int:rest_id>/')
@@ -27,6 +24,56 @@ def listRestaurantMenuItems(rest_id):
     restaurant = getRestaurantById(rest_id)
     items = getAllMenuItemsByRestaurantId(restaurant.id)
     return render_template('menu.html', restaurant=restaurant, items=items)
+
+
+@app.route('/restaurants/<int:rest_id>/menu/JSON')
+def restaurantMenuJSON(rest_id):
+    items = getAllMenuItemsByRestaurantId(rest_id)
+    return jsonify(MenuItems=[i.serialize for i in items])
+
+
+@app.route('/restaurants/<int:rest_id>/menu/<int:item_id>/JSON')
+def restaurantMenuItemJSON(rest_id, item_id):
+    item = getMenuItemById(item_id)
+    return jsonify(MenuItems=[item.serialize])
+
+
+@app.route('/restaurants/add/', methods=['GET', 'POST'])
+def addRestaurant():
+    if request.method == 'GET':
+        return render_template('addRestaurant.html')
+    else:
+        restaurant = Restaurant()
+        restaurant.name = request.form['name']
+        session.add(restaurant)
+        session.commit()
+        flash("New Restaurant Created")
+        return redirect(url_for('listRestaurants'))
+
+
+@app.route('/restaurants/<int:rest_id>/edit/', methods=['GET', 'POST'])
+def editRestaurant(rest_id):
+    restaurant = getRestaurantById(rest_id)
+    if request.method == 'GET':
+        return render_template('editRestaurant.html', restaurant=restaurant)
+    else:
+        restaurant.name = request.form['name']
+        session.add(restaurant)
+        session.commit()
+        flash("Restaurant name updated")
+        return redirect(url_for('listRestaurants'))
+
+
+@app.route('/restaurants/<int:rest_id>/delete/', methods=['GET', 'POST'])
+def deleteRestaurant(rest_id):
+    restaurant = getRestaurantById(rest_id)
+    if request.method == 'GET':
+        return render_template('deleteRestaurant.html', rest_name=restaurant.name, rest_id=rest_id)
+    else:
+        session.delete(restaurant)
+        session.commit()
+        flash("Restaurant deleted")
+        return redirect(url_for('listRestaurants'))
 
 
 @app.route('/restaurants/<int:rest_id>/menu/add/', methods=['GET', 'POST'])
